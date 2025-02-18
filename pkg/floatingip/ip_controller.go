@@ -587,25 +587,38 @@ func (i *ipController) reconcileAssignment(ctx context.Context) {
 
 func (i *ipController) reconcileDNS(ctx context.Context) {
     if len(i.ips) == 0 || i.dns == nil || !i.dnsDirty {
+        i.log.Info("Skipping DNS reconciliation: no IPs, DNS is nil, or DNS is not dirty")
         return
     }
 
     // Filter out IPs that are not in the active state
     activeIPs := []string{}
     for _, ip := range i.ips {
-        status := i.ipToStatus[ip]
+        status, exists := i.ipToStatus[ip]
+        if !exists {
+            i.log.WithField("ip", ip).Warn("IP status not found")
+            continue
+        }
+        i.log.WithFields(logrus.Fields{
+            "ip":    ip,
+            "state": status.state,
+        }).Info("Checking IP state")
         if status.state == flipopv1alpha1.IPStateActive {
             activeIPs = append(activeIPs, ip)
         }
     }
 
-    i.log.WithField("ips", activeIPs).Info("updating dns")
-    err := i.dnsProvider.EnsureDNSARecordSet(ctx, i.dns.Zone, i.dns.RecordName, activeIPs, i.dns.TTL)
-    if err != nil {
-        i.log.WithError(err).Error("setting DNSRecordSet")
-        return
+    if len(activeIPs) == 0 {
+        i.log.Warn("No active IPs found for DNS update")
+    } else {
+        i.log.WithField("activeIPs", activeIPs).Info("Updating DNS with active IPs")
+        err := i.dnsProvider.EnsureDNSARecordSet(ctx, i.dns.Zone, i.dns.RecordName, activeIPs, i.dns.TTL)
+        if err != nil {
+            i.log.WithError(err).Error("Setting DNSRecordSet")
+            return
+        }
+        i.dnsDirty = false
     }
-    i.dnsDirty = false
 }
 
 func (i *ipController) DisableNodes(nodes ...*corev1.Node) {

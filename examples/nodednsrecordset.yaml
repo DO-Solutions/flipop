@@ -9,9 +9,9 @@ spec:
     zone: example.com
     ttl: 120 
   match:
-    podNamespace: ingress
-    podLabel: app=nginx-ingress,component=controller
-    nodeLabel: doks.digitalocean.com/node-pool=work
+#    podNamespace: ingress
+#    podLabel: app=nginx-ingress,component=controller
+    nodeLabel: doks.digitalocean.com/node-pool=pool-flipop-2
     tolerations:
       - effect: NoSchedule
         key: node.kubernetes.io/unschedulable

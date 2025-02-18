@@ -4,20 +4,20 @@ metadata:
   name: ingress-pool
 spec: 
   provider: digitalocean
-  region: nyc3
-  desiredIPs: 3
+  region: nyc1
+  desiredIPs: 2
   ips:
-  - 192.168.1.1
-  - 192.168.2.1
+  - 24.199.66.47
+  - 157.230.201.226
   dnsRecordSet:
-    recordName: hello-world
-    zone: example.com
+    recordName: fixed-flipop
+    zone: example-app.dev
     ttl: 120
   assignmentCoolOffSeconds: 20
   match:
-    podNamespace: ingress
-    podLabel: app=nginx-ingress,component=controller
-    nodeLabel: doks.digitalocean.com/node-pool=work
+#    podNamespace: ingress
+#    podLabel: app=nginx-ingress,component=controller
+    nodeLabel: doks.digitalocean.com/node-pool=pool-flipop-2
     tolerations:
       - effect: NoSchedule
         key: node.kubernetes.io/unschedulable
